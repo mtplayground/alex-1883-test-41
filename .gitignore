@@ -1,5 +1,7 @@
 target/
 node_modules/
+dist/
+.vite/
 .gh_token
 .claude/
 .database_url
@@ -8,6 +10,8 @@ node_modules/
 .app_name
 .gh_user
 .github_token
+.db_decision
+.storage_decision
 .pipeline-state.json
 .gitkeep
 .progress

@@ -37,4 +37,10 @@ export type CalculatorAction =
     }
   | {
       type: 'clear';
+    }
+  | {
+      type: 'backspace';
+    }
+  | {
+      type: 'commitResult';
     };

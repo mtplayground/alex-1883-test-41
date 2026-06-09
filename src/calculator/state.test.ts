@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { createCalculatorState } from './state';
+import { calculatorReducer, createCalculatorState } from './state';
 
 describe('calculator state', () => {
   it('starts ready for an empty expression', () => {
@@ -35,5 +35,34 @@ describe('calculator state', () => {
     if (state.result.status === 'error') {
       expect(state.result.code).toBe('DIVIDE_BY_ZERO');
     }
+  });
+
+  it('appends keypad input and recomputes the result', () => {
+    let state = createCalculatorState();
+
+    for (const input of ['1', '2', ' + ', '3']) {
+      state = calculatorReducer(state, { type: 'appendInput', input });
+    }
+
+    expect(state.expression).toBe('12 + 3');
+    expect(state.result.status).toBe('success');
+    expect(state.result.text).toBe('15');
+  });
+
+  it('supports backspace, all-clear, and equals commit actions', () => {
+    let state = createCalculatorState('12 + 3');
+
+    state = calculatorReducer(state, { type: 'backspace' });
+    expect(state.expression).toBe('12 +');
+    expect(state.result.status).toBe('error');
+
+    state = calculatorReducer(state, { type: 'clear' });
+    expect(state.expression).toBe('');
+    expect(state.result.status).toBe('idle');
+
+    state = createCalculatorState('10 ÷ 4');
+    state = calculatorReducer(state, { type: 'commitResult' });
+    expect(state.expression).toBe('2.5');
+    expect(state.result.status).toBe('success');
   });
 });

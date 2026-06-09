@@ -2,7 +2,9 @@ import { useReducer } from 'react';
 import { evaluateExpression } from '../engine';
 import type { AngleMode } from '../engine';
 import { formatError, formatNumber } from './format';
-import type { CalculatorAction, CalculatorResult, CalculatorState } from './types';
+import type { CalculatorAction, CalculatorResult, CalculatorState, HistoryEntry } from './types';
+
+const MAX_HISTORY_ENTRIES = 10;
 
 const READY_RESULT: CalculatorResult = {
   status: 'idle',
@@ -12,11 +14,13 @@ const READY_RESULT: CalculatorResult = {
 export function createCalculatorState(
   expression = '',
   angleMode: AngleMode = 'rad',
+  history: HistoryEntry[] = [],
 ): CalculatorState {
   return {
     expression,
     angleMode,
     result: evaluateCalculatorExpression(expression, angleMode),
+    history,
   };
 }
 
@@ -26,17 +30,27 @@ export function calculatorReducer(
 ): CalculatorState {
   switch (action.type) {
     case 'setExpression':
-      return createCalculatorState(action.expression, state.angleMode);
+      return createCalculatorState(action.expression, state.angleMode, state.history);
     case 'appendInput':
-      return createCalculatorState(`${state.expression}${action.input}`, state.angleMode);
+      return createCalculatorState(
+        `${state.expression}${action.input}`,
+        state.angleMode,
+        state.history,
+      );
     case 'setAngleMode':
-      return createCalculatorState(state.expression, action.angleMode);
+      return createCalculatorState(state.expression, action.angleMode, state.history);
     case 'clear':
-      return createCalculatorState('', state.angleMode);
+      return createCalculatorState('', state.angleMode, state.history);
     case 'backspace':
-      return createCalculatorState(removeLastInput(state.expression), state.angleMode);
+      return createCalculatorState(
+        removeLastInput(state.expression),
+        state.angleMode,
+        state.history,
+      );
     case 'commitResult':
       return commitResult(state);
+    case 'reuseHistory':
+      return createCalculatorState(action.entry.expression, action.entry.angleMode, state.history);
   }
 }
 
@@ -75,9 +89,28 @@ function removeLastInput(expression: string): string {
 }
 
 function commitResult(state: CalculatorState): CalculatorState {
-  if (state.result.status !== 'success') {
+  if (state.result.status !== 'success' || state.expression.trim().length === 0) {
     return state;
   }
 
-  return createCalculatorState(state.result.text, state.angleMode);
+  const entry = createHistoryEntry(state);
+  const history = addHistoryEntry(state.history, entry);
+
+  return createCalculatorState(state.result.text, state.angleMode, history);
+}
+
+function createHistoryEntry(state: CalculatorState): HistoryEntry {
+  const expression = state.expression.trim();
+  const result = state.result.status === 'success' ? state.result.text : '';
+
+  return {
+    id: `${state.angleMode}:${expression}=${result}`,
+    expression,
+    result,
+    angleMode: state.angleMode,
+  };
+}
+
+function addHistoryEntry(history: HistoryEntry[], entry: HistoryEntry): HistoryEntry[] {
+  return [entry, ...history.filter((item) => item.id !== entry.id)].slice(0, MAX_HISTORY_ENTRIES);
 }

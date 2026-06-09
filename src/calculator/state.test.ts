@@ -40,13 +40,38 @@ describe('calculator state', () => {
   });
 
   it('stores structured engine errors for display', () => {
-    const state = createCalculatorState('1 / 0');
+    const cases = [
+      {
+        expression: '1 / 0',
+        text: 'Cannot divide by zero',
+        code: 'DIVIDE_BY_ZERO',
+      },
+      {
+        expression: '1 + )',
+        text: 'Invalid expression',
+        code: 'UNEXPECTED_TOKEN',
+      },
+      {
+        expression: '(1 + 2',
+        text: 'Check parentheses',
+        code: 'MISMATCHED_PAREN',
+      },
+      {
+        expression: 'exp(1000)',
+        text: 'Result is too large',
+        code: 'OVERFLOW',
+      },
+    ] as const;
 
-    expect(state.result.status).toBe('error');
-    expect(state.result.text).toBe('Cannot divide by zero');
+    for (const { expression, text, code } of cases) {
+      const state = createCalculatorState(expression);
 
-    if (state.result.status === 'error') {
-      expect(state.result.code).toBe('DIVIDE_BY_ZERO');
+      expect(state.result.status).toBe('error');
+      expect(state.result.text).toBe(text);
+
+      if (state.result.status === 'error') {
+        expect(state.result.code).toBe(code);
+      }
     }
   });
 

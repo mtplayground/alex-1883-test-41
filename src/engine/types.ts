@@ -58,3 +58,41 @@ export interface TokenizeError extends SourceSpan {
 }
 
 export type TokenizeResult = { ok: true; tokens: Token[] } | { ok: false; error: TokenizeError };
+
+export type AstNode = NumberAstNode | UnaryAstNode | BinaryAstNode;
+
+export interface NumberAstNode extends SourceSpan {
+  type: 'number';
+  value: number;
+}
+
+export interface UnaryAstNode extends SourceSpan {
+  type: 'unary';
+  operator: '+' | '-';
+  argument: AstNode;
+}
+
+export interface BinaryAstNode extends SourceSpan {
+  type: 'binary';
+  operator: OperatorSymbol;
+  left: AstNode;
+  right: AstNode;
+}
+
+export type EvalErrorCode =
+  | TokenizeErrorCode
+  | 'EMPTY_EXPRESSION'
+  | 'UNEXPECTED_TOKEN'
+  | 'MISMATCHED_PAREN'
+  | 'UNSUPPORTED_TOKEN'
+  | 'DIVIDE_BY_ZERO'
+  | 'OVERFLOW';
+
+export interface EvalError extends SourceSpan {
+  code: EvalErrorCode;
+  message: string;
+}
+
+export type ParseResult = { ok: true; node: AstNode } | { ok: false; error: EvalError };
+
+export type EvalResult = { ok: true; value: number } | { ok: false; error: EvalError };

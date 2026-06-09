@@ -1,8 +1,14 @@
 import { parseTokens } from './parser';
 import { tokenize } from './tokenizer';
-import type { AstNode, EvalError, EvalResult, Token } from './types';
+import type { AstNode, EvaluateOptions, EvalError, EvalResult, FunctionName, Token } from './types';
 
-export function evaluateExpression(input: string): EvalResult {
+const DEFAULT_EVALUATE_OPTIONS = {
+  angleMode: 'rad',
+} satisfies Required<EvaluateOptions>;
+
+const NEAR_ZERO = 1e-12;
+
+export function evaluateExpression(input: string, options: EvaluateOptions = {}): EvalResult {
   const tokenized = tokenize(input);
 
   if (!tokenized.ok) {
@@ -12,32 +18,48 @@ export function evaluateExpression(input: string): EvalResult {
     };
   }
 
-  return evaluateTokens(tokenized.tokens);
+  return evaluateTokens(tokenized.tokens, options);
 }
 
-export function evaluateTokens(tokens: Token[]): EvalResult {
+export function evaluateTokens(tokens: Token[], options: EvaluateOptions = {}): EvalResult {
   const parsed = parseTokens(tokens);
 
   if (!parsed.ok) {
     return parsed;
   }
 
-  return evaluateAst(parsed.node);
+  return evaluateAst(parsed.node, normalizeOptions(options));
 }
 
-function evaluateAst(node: AstNode): EvalResult {
+function evaluateAst(node: AstNode, options: Required<EvaluateOptions>): EvalResult {
   switch (node.type) {
     case 'number':
       return { ok: true, value: node.value };
+    case 'constant':
+      return evaluateConstant(node);
     case 'unary':
-      return evaluateUnary(node);
+      return evaluateUnary(node, options);
     case 'binary':
-      return evaluateBinary(node);
+      return evaluateBinary(node, options);
+    case 'functionCall':
+      return evaluateFunction(node, options);
   }
 }
 
-function evaluateUnary(node: Extract<AstNode, { type: 'unary' }>): EvalResult {
-  const evaluated = evaluateAst(node.argument);
+function evaluateConstant(node: Extract<AstNode, { type: 'constant' }>): EvalResult {
+  switch (node.name) {
+    case 'pi':
+      return { ok: true, value: Math.PI };
+    case 'e':
+      return { ok: true, value: Math.E };
+  }
+}
+
+function evaluateUnary(
+  node: Extract<AstNode, { type: 'unary' }>,
+  options: Required<EvaluateOptions>,
+): EvalResult {
+  const evaluated = evaluateAst(node.argument, options);
 
   if (!evaluated.ok) {
     return evaluated;
@@ -48,14 +70,17 @@ function evaluateUnary(node: Extract<AstNode, { type: 'unary' }>): EvalResult {
   return ensureFinite(value, node.start, node.end);
 }
 
-function evaluateBinary(node: Extract<AstNode, { type: 'binary' }>): EvalResult {
-  const left = evaluateAst(node.left);
+function evaluateBinary(
+  node: Extract<AstNode, { type: 'binary' }>,
+  options: Required<EvaluateOptions>,
+): EvalResult {
+  const left = evaluateAst(node.left, options);
 
   if (!left.ok) {
     return left;
   }
 
-  const right = evaluateAst(node.right);
+  const right = evaluateAst(node.right, options);
 
   if (!right.ok) {
     return right;
@@ -95,6 +120,116 @@ function evaluateBinary(node: Extract<AstNode, { type: 'binary' }>): EvalResult 
   }
 }
 
+function evaluateFunction(
+  node: Extract<AstNode, { type: 'functionCall' }>,
+  options: Required<EvaluateOptions>,
+): EvalResult {
+  const evaluated = evaluateAst(node.argument, options);
+
+  if (!evaluated.ok) {
+    return evaluated;
+  }
+
+  const value = applyFunction(node.name, evaluated.value, node, options);
+
+  if (!value.ok) {
+    return value;
+  }
+
+  return ensureFinite(value.value, node.start, node.end);
+}
+
+function applyFunction(
+  name: FunctionName,
+  value: number,
+  node: Extract<AstNode, { type: 'functionCall' }>,
+  options: Required<EvaluateOptions>,
+): EvalResult {
+  switch (name) {
+    case 'sin':
+      return { ok: true, value: snapNearZero(Math.sin(toRadiansIfNeeded(value, options))) };
+    case 'cos':
+      return { ok: true, value: snapNearZero(Math.cos(toRadiansIfNeeded(value, options))) };
+    case 'tan':
+      return evaluateTangent(value, node, options);
+    case 'sqrt':
+      if (value < 0) {
+        return createError(
+          'DOMAIN_ERROR',
+          'Square root requires a non-negative value.',
+          node.start,
+          node.end,
+        );
+      }
+
+      return { ok: true, value: Math.sqrt(value) };
+    case 'cbrt':
+      return { ok: true, value: Math.cbrt(value) };
+    case 'log':
+      if (value <= 0) {
+        return createError(
+          'DOMAIN_ERROR',
+          'Logarithm requires a positive value.',
+          node.start,
+          node.end,
+        );
+      }
+
+      return { ok: true, value: Math.log10(value) };
+    case 'ln':
+      if (value <= 0) {
+        return createError(
+          'DOMAIN_ERROR',
+          'Natural logarithm requires a positive value.',
+          node.start,
+          node.end,
+        );
+      }
+
+      return { ok: true, value: Math.log(value) };
+    case 'exp':
+      return { ok: true, value: Math.exp(value) };
+    case 'abs':
+      return { ok: true, value: Math.abs(value) };
+    case 'asin':
+    case 'acos':
+    case 'atan':
+      return createError(
+        'UNSUPPORTED_TOKEN',
+        `"${name}" is not supported by this scientific function set.`,
+        node.start,
+        node.end,
+      );
+  }
+}
+
+function evaluateTangent(
+  value: number,
+  node: Extract<AstNode, { type: 'functionCall' }>,
+  options: Required<EvaluateOptions>,
+): EvalResult {
+  const radians = toRadiansIfNeeded(value, options);
+
+  if (Math.abs(Math.cos(radians)) < NEAR_ZERO) {
+    return createError(
+      'DOMAIN_ERROR',
+      'Tangent is undefined for this angle.',
+      node.start,
+      node.end,
+    );
+  }
+
+  return { ok: true, value: snapNearZero(Math.tan(radians)) };
+}
+
+function toRadiansIfNeeded(value: number, options: Required<EvaluateOptions>): number {
+  return options.angleMode === 'deg' ? (value * Math.PI) / 180 : value;
+}
+
+function snapNearZero(value: number): number {
+  return Math.abs(value) < NEAR_ZERO ? 0 : value;
+}
+
 function ensureFinite(value: number, start: number, end: number): EvalResult {
   if (!Number.isFinite(value)) {
     return createError(
@@ -106,6 +241,13 @@ function ensureFinite(value: number, start: number, end: number): EvalResult {
   }
 
   return { ok: true, value };
+}
+
+function normalizeOptions(options: EvaluateOptions): Required<EvaluateOptions> {
+  return {
+    ...DEFAULT_EVALUATE_OPTIONS,
+    ...options,
+  };
 }
 
 function createError(

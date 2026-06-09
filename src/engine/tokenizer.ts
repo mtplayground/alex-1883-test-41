@@ -35,6 +35,7 @@ const FUNCTIONS = new Set<FunctionName>([
   'acos',
   'atan',
   'sqrt',
+  'cbrt',
   'log',
   'ln',
   'exp',

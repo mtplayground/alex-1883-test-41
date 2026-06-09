@@ -3,12 +3,16 @@ export { parseTokens } from './parser';
 export { tokenize } from './tokenizer';
 export type {
   AstNode,
+  AngleMode,
   BinaryAstNode,
+  ConstantAstNode,
   ConstantName,
   ConstantToken,
+  EvaluateOptions,
   EvalError,
   EvalErrorCode,
   EvalResult,
+  FunctionCallAstNode,
   FunctionName,
   FunctionToken,
   NumberAstNode,

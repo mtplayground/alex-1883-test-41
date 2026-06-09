@@ -174,6 +174,40 @@ class Parser {
       };
     }
 
+    if (token.type === 'constant') {
+      this.advance();
+      return {
+        ok: true,
+        node: {
+          type: 'constant',
+          name: token.name,
+          start: token.start,
+          end: token.end,
+        },
+      };
+    }
+
+    if (token.type === 'function') {
+      this.advance();
+
+      const argument = this.parseExpression(UNARY_PRECEDENCE);
+
+      if (!argument.ok) {
+        return argument;
+      }
+
+      return {
+        ok: true,
+        node: {
+          type: 'functionCall',
+          name: token.name,
+          argument: argument.node,
+          start: token.start,
+          end: argument.node.end,
+        },
+      };
+    }
+
     if (token.type === 'leftParen') {
       this.advance();
 
@@ -206,18 +240,6 @@ class Parser {
           start: token.start,
           end: closing.end,
         },
-      };
-    }
-
-    if (token.type === 'function' || token.type === 'constant') {
-      return {
-        ok: false,
-        error: createError(
-          'UNSUPPORTED_TOKEN',
-          `"${token.raw}" will be supported with the scientific expression engine.`,
-          token.start,
-          token.end,
-        ),
       };
     }
 

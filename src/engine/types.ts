@@ -8,12 +8,19 @@ export type FunctionName =
   | 'acos'
   | 'atan'
   | 'sqrt'
+  | 'cbrt'
   | 'log'
   | 'ln'
   | 'exp'
   | 'abs';
 
 export type ConstantName = 'pi' | 'e';
+
+export type AngleMode = 'rad' | 'deg';
+
+export interface EvaluateOptions {
+  angleMode?: AngleMode;
+}
 
 export interface SourceSpan {
   start: number;
@@ -59,11 +66,21 @@ export interface TokenizeError extends SourceSpan {
 
 export type TokenizeResult = { ok: true; tokens: Token[] } | { ok: false; error: TokenizeError };
 
-export type AstNode = NumberAstNode | UnaryAstNode | BinaryAstNode;
+export type AstNode =
+  | NumberAstNode
+  | ConstantAstNode
+  | UnaryAstNode
+  | BinaryAstNode
+  | FunctionCallAstNode;
 
 export interface NumberAstNode extends SourceSpan {
   type: 'number';
   value: number;
+}
+
+export interface ConstantAstNode extends SourceSpan {
+  type: 'constant';
+  name: ConstantName;
 }
 
 export interface UnaryAstNode extends SourceSpan {
@@ -79,12 +96,19 @@ export interface BinaryAstNode extends SourceSpan {
   right: AstNode;
 }
 
+export interface FunctionCallAstNode extends SourceSpan {
+  type: 'functionCall';
+  name: FunctionName;
+  argument: AstNode;
+}
+
 export type EvalErrorCode =
   | TokenizeErrorCode
   | 'EMPTY_EXPRESSION'
   | 'UNEXPECTED_TOKEN'
   | 'MISMATCHED_PAREN'
   | 'UNSUPPORTED_TOKEN'
+  | 'DOMAIN_ERROR'
   | 'DIVIDE_BY_ZERO'
   | 'OVERFLOW';
 

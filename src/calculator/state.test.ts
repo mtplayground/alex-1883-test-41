@@ -26,6 +26,18 @@ describe('calculator state', () => {
     expect(state.result.text).toBe('1');
   });
 
+  it('updates angle mode and recomputes the active expression', () => {
+    let state = createCalculatorState('sin(90)');
+
+    expect(state.angleMode).toBe('rad');
+
+    state = calculatorReducer(state, { type: 'setAngleMode', angleMode: 'deg' });
+
+    expect(state.angleMode).toBe('deg');
+    expect(state.result.status).toBe('success');
+    expect(state.result.text).toBe('1');
+  });
+
   it('stores structured engine errors for display', () => {
     const state = createCalculatorState('1 / 0');
 

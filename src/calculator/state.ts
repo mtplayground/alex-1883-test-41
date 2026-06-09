@@ -33,6 +33,10 @@ export function calculatorReducer(
       return createCalculatorState(state.expression, action.angleMode);
     case 'clear':
       return createCalculatorState('', state.angleMode);
+    case 'backspace':
+      return createCalculatorState(removeLastInput(state.expression), state.angleMode);
+    case 'commitResult':
+      return commitResult(state);
   }
 }
 
@@ -64,4 +68,16 @@ function evaluateCalculatorExpression(expression: string, angleMode: AngleMode):
     text: formatNumber(result.value),
     value: result.value,
   };
+}
+
+function removeLastInput(expression: string): string {
+  return expression.trimEnd().slice(0, -1).trimEnd();
+}
+
+function commitResult(state: CalculatorState): CalculatorState {
+  if (state.result.status !== 'success') {
+    return state;
+  }
+
+  return createCalculatorState(state.result.text, state.angleMode);
 }

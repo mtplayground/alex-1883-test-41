@@ -1,27 +1,9 @@
 import { useCalculatorState } from './calculator/state';
+import { BasicKeypad } from './components/BasicKeypad';
 import { Display } from './components/Display';
 
-const previewKeys = [
-  '7',
-  '8',
-  '9',
-  '/',
-  '4',
-  '5',
-  '6',
-  '*',
-  '1',
-  '2',
-  '3',
-  '-',
-  '0',
-  '.',
-  '=',
-  '+',
-];
-
 export default function App() {
-  const { state } = useCalculatorState();
+  const { state, dispatch } = useCalculatorState();
 
   return (
     <main
@@ -44,18 +26,7 @@ export default function App() {
 
         <Display state={state} />
 
-        <section className="grid grid-cols-4 gap-2.5" aria-label="Calculator keypad preview">
-          {previewKeys.map((key) => (
-            <button
-              className="min-h-14 rounded-lg border border-slate-200 bg-white font-medium text-slate-800 shadow-sm disabled:cursor-not-allowed disabled:opacity-80"
-              type="button"
-              disabled
-              key={key}
-            >
-              {key}
-            </button>
-          ))}
-        </section>
+        <BasicKeypad dispatch={dispatch} />
       </section>
     </main>
   );

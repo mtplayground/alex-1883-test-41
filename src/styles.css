@@ -1,101 +1,27 @@
-:root {
-  color: #172026;
-  background: #f5f7fb;
-  font-family:
-    Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
+@import "tailwindcss";
 
-* {
-  box-sizing: border-box;
-}
+@layer base {
+  :root {
+    color: #172026;
+    background: #f1f5f9;
+    font-family:
+      Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    font-synthesis: none;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
 
-body {
-  min-width: 320px;
-  min-height: 100vh;
-  margin: 0;
-}
+  body {
+    min-width: 320px;
+    min-height: 100vh;
+    margin: 0;
+  }
 
-button,
-input,
-textarea,
-select {
-  font: inherit;
-}
-
-.app-shell {
-  min-height: 100vh;
-  display: grid;
-  place-items: center;
-  padding: 24px;
-}
-
-.calculator-shell {
-  width: min(100%, 420px);
-  display: grid;
-  gap: 16px;
-}
-
-.calculator-header {
-  display: grid;
-  gap: 6px;
-}
-
-.eyebrow {
-  margin: 0;
-  color: #586a7a;
-  font-size: 0.85rem;
-}
-
-h1 {
-  margin: 0;
-  color: #0f1720;
-  font-size: clamp(2rem, 8vw, 3rem);
-  line-height: 1;
-}
-
-.display-panel {
-  min-height: 132px;
-  display: grid;
-  align-content: end;
-  gap: 12px;
-  padding: 24px;
-  border: 1px solid #d8e0ea;
-  border-radius: 8px;
-  background: #ffffff;
-  box-shadow: 0 16px 40px rgb(15 23 32 / 8%);
-}
-
-.expression,
-.result {
-  margin: 0;
-  text-align: right;
-}
-
-.expression {
-  color: #627386;
-  font-size: 1.1rem;
-}
-
-.result {
-  color: #0f1720;
-  font-size: 2rem;
-  font-weight: 700;
-}
-
-.keypad-preview {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 10px;
-}
-
-.key {
-  min-height: 58px;
-  border: 1px solid #d8e0ea;
-  border-radius: 8px;
-  color: #172026;
-  background: #ffffff;
+  button,
+  input,
+  textarea,
+  select {
+    font: inherit;
+  }
 }

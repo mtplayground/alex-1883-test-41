@@ -1,6 +1,7 @@
 import { useCalculatorState } from './calculator/state';
 import { BasicKeypad } from './components/BasicKeypad';
 import { Display } from './components/Display';
+import { ScientificKeypad } from './components/ScientificKeypad';
 
 export default function App() {
   const { state, dispatch } = useCalculatorState();
@@ -11,7 +12,7 @@ export default function App() {
       aria-labelledby="app-title"
     >
       <section
-        className="grid w-full max-w-[420px] gap-4"
+        className="grid w-full max-w-[480px] gap-4"
         aria-label="Calculator application shell"
       >
         <header className="grid gap-1.5">
@@ -25,6 +26,8 @@ export default function App() {
         </header>
 
         <Display state={state} />
+
+        <ScientificKeypad state={state} dispatch={dispatch} />
 
         <BasicKeypad dispatch={dispatch} />
       </section>

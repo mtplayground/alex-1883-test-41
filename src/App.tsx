@@ -1,3 +1,4 @@
+import { useKeyboardInput } from './calculator/keyboard';
 import { useCalculatorState } from './calculator/state';
 import { BasicKeypad } from './components/BasicKeypad';
 import { Display } from './components/Display';
@@ -5,6 +6,7 @@ import { ScientificKeypad } from './components/ScientificKeypad';
 
 export default function App() {
   const { state, dispatch } = useCalculatorState();
+  useKeyboardInput(dispatch);
 
   return (
     <main

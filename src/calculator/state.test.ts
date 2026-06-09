@@ -7,6 +7,7 @@ describe('calculator state', () => {
 
     expect(state.expression).toBe('');
     expect(state.angleMode).toBe('rad');
+    expect(state.history).toEqual([]);
     expect(state.result.status).toBe('idle');
     expect(state.result.text).toBe('Ready');
   });
@@ -76,5 +77,34 @@ describe('calculator state', () => {
     state = calculatorReducer(state, { type: 'commitResult' });
     expect(state.expression).toBe('2.5');
     expect(state.result.status).toBe('success');
+  });
+
+  it('records successful committed calculations in session history', () => {
+    let state = createCalculatorState('2 + 2');
+
+    state = calculatorReducer(state, { type: 'commitResult' });
+
+    expect(state.history).toHaveLength(1);
+    expect(state.history[0]).toMatchObject({
+      expression: '2 + 2',
+      result: '4',
+      angleMode: 'rad',
+    });
+  });
+
+  it('reuses a history entry without removing it from the session list', () => {
+    let state = createCalculatorState('sin(90)', 'deg');
+
+    state = calculatorReducer(state, { type: 'commitResult' });
+
+    const entry = state.history[0];
+    state = calculatorReducer(state, { type: 'clear' });
+    state = calculatorReducer(state, { type: 'reuseHistory', entry });
+
+    expect(state.expression).toBe('sin(90)');
+    expect(state.angleMode).toBe('deg');
+    expect(state.result.status).toBe('success');
+    expect(state.result.text).toBe('1');
+    expect(state.history).toHaveLength(1);
   });
 });

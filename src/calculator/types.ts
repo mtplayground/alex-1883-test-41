@@ -20,6 +20,14 @@ export interface CalculatorState {
   expression: string;
   angleMode: AngleMode;
   result: CalculatorResult;
+  history: HistoryEntry[];
+}
+
+export interface HistoryEntry {
+  id: string;
+  expression: string;
+  result: string;
+  angleMode: AngleMode;
 }
 
 export type CalculatorAction =
@@ -43,4 +51,8 @@ export type CalculatorAction =
     }
   | {
       type: 'commitResult';
+    }
+  | {
+      type: 'reuseHistory';
+      entry: HistoryEntry;
     };

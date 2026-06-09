@@ -1,0 +1,62 @@
+Architecture plan for alex-1883-test-41
+
+Product scope
+- Build a browser-based scientific calculator using Vite, React, and TypeScript.
+- PRODUCT.md is not present in the repository at setup time, so this plan uses the issue scopes and existing README repository name only.
+
+Module structure and file organization
+- Root project files:
+  - package.json, package-lock.json or equivalent lockfile, tsconfig*.json, vite.config.ts
+  - eslint/prettier config, .env.example
+  - index.html
+- src/:
+  - main.tsx: React bootstrap.
+  - App.tsx: app shell and calculator composition.
+  - styles/index.css: Tailwind imports, CSS variables, global base styles.
+  - engine/
+    - types.ts: shared Token, TokenType, Operator, AngleMode, EvalResult, EvalError, FunctionName, ConstantName.
+    - tokenizer.ts: converts expression strings into typed tokens.
+    - parser.ts: builds/evaluates an AST or evaluates through a precedence-aware parser.
+    - evaluator.ts: numeric evaluation, functions, constants, angle conversion, domain checks.
+    - index.ts: public engine API, for example evaluateExpression(input, options).
+  - calculator/
+    - types.ts: CalculatorState, HistoryEntry, InputAction.
+    - reducer.ts: deterministic state transitions for button and keyboard actions.
+    - inputMap.ts: maps keypad and keyboard inputs to InputAction values.
+    - format.ts: display/result formatting and error message normalization.
+  - components/
+    - Calculator.tsx: layout coordinator.
+    - Display.tsx: expression, result, and error display.
+    - BasicKeypad.tsx: digits, decimal, core operators, percent, clear/all-clear, equals.
+    - ScientificKeypad.tsx: trig/log/powers/roots/parentheses/constants and angle-mode toggle.
+    - HistoryPanel.tsx: recent calculations and reuse interactions.
+- tests/:
+  - engine unit tests near engine modules or in src/engine/*.test.ts.
+  - e2e tests under e2e/ or tests/e2e depending on the selected runner.
+
+Shared types
+- Token should be a discriminated union for numbers, operators, functions, constants, parentheses, separators if needed, and EOF/internal parser markers if useful.
+- EvalResult should be a discriminated union: { ok: true; value: number } or { ok: false; error: EvalError }.
+- EvalError should carry a stable code such as INVALID_TOKEN, UNEXPECTED_TOKEN, MISMATCHED_PAREN, DIVIDE_BY_ZERO, DOMAIN_ERROR, OVERFLOW, EMPTY_EXPRESSION.
+- AngleMode should be "deg" | "rad" and live in shared engine/calculator types to avoid UI-specific string drift.
+- Calculator state should keep expression text, preview/final result, angle mode, history, and the last action where needed for ergonomic input behavior.
+
+Issue dependencies and implementation order
+- Issue #1 initializes the Vite + React + TypeScript skeleton and basic shell.
+- Issues #2 and #3 add styling/tooling foundations after the project exists.
+- Issues #4, #5, and #6 form the expression engine: tokenizer, precedence-aware parser/evaluator, then scientific extensions.
+- Issue #7 validates the engine before deeper UI integration.
+- Issue #8 introduces display and calculator state, using the public engine API.
+- Issues #9, #10, #11, and #12 add input surfaces and session history on top of the state model.
+- Issue #13 adds end-to-end coverage once UI flows exist.
+- Issue #14 hardens error handling across engine and UI after the full feature set is present.
+- Issue #15 finalizes production build output, static hosting notes, and .env.example.
+
+Key design decisions
+- Keep the expression engine framework-independent so it can be unit tested without React and reused by keyboard, keypad, and history flows.
+- Prefer a recursive descent or Pratt parser over ad hoc string evaluation. This gives explicit precedence, parentheses, unary operators, functions, and structured errors without eval().
+- Treat UI inputs as actions processed by a reducer. This keeps buttons and keyboard support consistent and makes edge cases testable.
+- Keep display formatting separate from evaluation so numeric precision, overflow, and user-facing error messages can be reviewed in one place.
+- Store calculation history in component state for the initial implementation. Persistence can be added later without changing engine contracts.
+- Use Tailwind for layout and visual styling, with a small set of CSS variables for theme-level colors and focus states.
+- Use Vitest/React Testing Library for unit and component tests, and Playwright for end-to-end browser flows unless later issue details require another tool.

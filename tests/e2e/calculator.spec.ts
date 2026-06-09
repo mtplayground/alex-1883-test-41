@@ -67,6 +67,18 @@ test('surfaces recoverable calculation errors', async ({ page }) => {
   await expect(result(page)).toHaveText('Cannot divide by zero');
 
   await page.getByRole('button', { name: 'All clear' }).click();
+  await pressButtons(page, ['Open parenthesis', 'One', 'Add', 'Two']);
+
+  await expect(display(page)).toContainText('(1 + 2');
+  await expect(result(page)).toHaveText('Check parentheses');
+
+  await page.getByRole('button', { name: 'All clear' }).click();
+  await pressButtons(page, ['Exponential', 'One', 'Zero', 'Zero', 'Zero', 'Close parenthesis']);
+
+  await expect(display(page)).toContainText('exp(1000)');
+  await expect(result(page)).toHaveText('Result is too large');
+
+  await page.getByRole('button', { name: 'All clear' }).click();
   await pressButtons(page, ['Square root', 'Nine', 'Close parenthesis']);
 
   await expect(display(page)).toContainText('sqrt(9)');

@@ -55,6 +55,7 @@ describe('expression engine', () => {
   it('returns structured errors for invalid expressions and domains', () => {
     expectError('', 'EMPTY_EXPRESSION');
     expectError('1 / 0', 'DIVIDE_BY_ZERO');
+    expectError('1 % 0', 'DIVIDE_BY_ZERO');
     expectError('(1 + 2', 'MISMATCHED_PAREN');
     expectError('1 + )', 'UNEXPECTED_TOKEN');
     expectError('sqrt(-1)', 'DOMAIN_ERROR');
@@ -62,5 +63,11 @@ describe('expression engine', () => {
     expectError('tan(90)', 'DOMAIN_ERROR', { angleMode: 'deg' });
     expectError('unknown(1)', 'UNKNOWN_IDENTIFIER');
     expectError('asin(1)', 'UNSUPPORTED_TOKEN');
+  });
+
+  it('returns overflow errors for finite inputs that exceed supported output range', () => {
+    expectError('1e308 * 10', 'OVERFLOW');
+    expectError('2 ^ 1024', 'OVERFLOW');
+    expectError('exp(1000)', 'OVERFLOW');
   });
 });

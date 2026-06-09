@@ -1,3 +1,6 @@
+import { useCalculatorState } from './calculator/state';
+import { Display } from './components/Display';
+
 const previewKeys = [
   '7',
   '8',
@@ -18,6 +21,8 @@ const previewKeys = [
 ];
 
 export default function App() {
+  const { state } = useCalculatorState();
+
   return (
     <main
       className="flex min-h-screen items-center justify-center bg-slate-100 px-4 py-8 text-slate-950 sm:px-6"
@@ -37,13 +42,7 @@ export default function App() {
           </h1>
         </header>
 
-        <section
-          className="grid min-h-32 content-end gap-3 rounded-lg border border-slate-200 bg-white p-6 text-right shadow-xl shadow-slate-200/70"
-          aria-label="Calculator display"
-        >
-          <p className="text-lg text-slate-500">0</p>
-          <p className="text-3xl font-bold text-slate-950">Ready</p>
-        </section>
+        <Display state={state} />
 
         <section className="grid grid-cols-4 gap-2.5" aria-label="Calculator keypad preview">
           {previewKeys.map((key) => (
